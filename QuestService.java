@@ -3,6 +3,18 @@ import java.util.*;
 public class QuestService {
     public ArrayList<Quest> quests = new ArrayList<>();
     public HashMap<String, Integer> stats = new HashMap<>();
+    public HashMap<String, Integer> inventory = new HashMap<>();
+
+    public void addItem(String item, int qty) {
+        inventory.put(item, inventory.getOrDefault(item, 0) + qty);
+    }
+    
+    public boolean useItem(String item, int qty) {
+        int have = inventory.getOrDefault(item, 0);
+        if (have < qty) return false;
+        inventory.put(item, have - qty);
+        return true;
+    }
 
     public QuestService() {
         stats.put("completed", 0);
@@ -20,7 +32,11 @@ public class QuestService {
 
         quests.add(new StoryQuest("S-" + key + "-1", "Decrypt Archive", ((key + 3) % 5) + 1));
         quests.add(new StoryQuest("S-" + key + "-2", "Escape the Loop", ((key + 4) % 5) + 1));
-        quests.add(new StoryQuest("S-" + key + "-3", "Boss: NullPointer", ((key + 5) % 5) + 1));
+
+        quests.add(new StoryQuest("S-" + key + "-3",
+            "Boss: NullPointer",
+            ((key + 5) % 5) + 1,
+            "KeyCard", 1));
     }
 
     public void listQuests() {
@@ -30,6 +46,10 @@ public class QuestService {
     }
 
     public Quest findById(String id) {
+        if (!id.matches("[DS]-\\d+-\\d+")) {
+            throw new InvalidQuestException("รูปแบบ Quest ID ไม่ถูกต้อง");
+        }
+
         for (Quest q : quests) {
             if (q.getId().equalsIgnoreCase(id)) return q;
         }

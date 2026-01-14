@@ -3,6 +3,13 @@ public abstract class Quest {
     protected String title;
     protected int difficulty; // 1-5
 
+    protected String requiredItem;
+    protected int requiredQty = 0;
+
+    public boolean needItem() {
+        return requiredItem != null && requiredQty > 0;
+    }
+
     public Quest(String id, String title, int difficulty) {
         this.id = id;
         this.title = title;

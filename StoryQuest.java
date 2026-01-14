@@ -3,6 +3,13 @@ public class StoryQuest extends Quest {
         super(id, title, difficulty);
     }
 
+    public StoryQuest(String id, String name, int difficulty,
+        String requiredItem, int requiredQty) {
+        super(id, name, difficulty);
+        this.requiredItem = requiredItem;
+        this.requiredQty = requiredQty;
+    }
+
     @Override
     public int rewardPoints(int key) {
         return (difficulty * 10 + key * 2) % 60 + 20;

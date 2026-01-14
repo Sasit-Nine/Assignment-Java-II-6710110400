@@ -1,12 +1,12 @@
 import java.util.*;
 
 public class Main {
-
     static int sumDigits(String studentId) {
         int sum = 0;
         for (int i = 0; i < studentId.length(); i++) {
             char c = studentId.charAt(i);
-            if (Character.isDigit(c)) sum += (c - '0');
+            if (Character.isDigit(c))
+                sum += (c - '0');
         }
         return sum;
     }
@@ -27,8 +27,10 @@ public class Main {
             String s = sc.nextLine().trim();
             try {
                 int v = Integer.parseInt(s);
-                if (v >= min && v <= max) return v;
-            } catch (Exception ignored) {}
+                if (v >= min && v <= max)
+                    return v;
+            } catch (Exception ignored) {
+            }
             System.out.println("ค่าที่กรอกไม่ถูกต้อง (" + min + "-" + max + ")");
         }
     }
@@ -42,17 +44,18 @@ public class Main {
 
         int key = sumDigits(studentId) % 97;
         int energy = (key * 7 + 13) % 100;
-        int logic  = (key * 11 + 5) % 100;
-        int luck   = (key * 17 + 19) % 100;
+        int logic = (key * 11 + 5) % 100;
+        int luck = (key * 17 + 19) % 100;
 
         QuestService qs = new QuestService();
         qs.seedQuests(key);
+        qs.addItem("KeyCard", 1);
 
         int totalScore = 0;
 
         while (true) {
-            System.out.println("\n[Menu] 1) List 2) Do quest 3) Stats 4) Exit");
-            int m = askInt(sc, "เลือกเมนู: ", 1, 4);
+            System.out.println("\n[Menu] 1) List 2) Do quest 3) Stats 4) Inventory 5) Exit");
+            int m = askInt(sc, "เลือกเมนู: ", 1, 5);
 
             if (m == 1) {
                 qs.listQuests();
@@ -61,27 +64,46 @@ public class Main {
                 System.out.print("พิมพ์ quest id: ");
                 String id = sc.nextLine().trim();
 
-                Quest q = qs.findById(id);
-                if (q == null) {
-                    System.out.println("ไม่พบ quest id นี้");
-                    continue;
-                }
+                try {
+                    Quest q = qs.findById(id);
+                    if (q == null) {
+                        System.out.println("ไม่พบ quest id นี้");
+                        continue;
+                    }
 
-                boolean ok = q.canComplete(energy, logic, luck);
-                if (ok) {
-                    int r = q.rewardPoints(key);
-                    totalScore += r;
-                    qs.stats.put("completed", qs.stats.get("completed") + 1);
-                    System.out.println("สำเร็จ! +" + r + " points");
-                } else {
-                    qs.stats.put("failed", qs.stats.get("failed") + 1);
-                    System.out.println("ยังทำไม่ได้ (ต้องมี energy>75 หรือ logic>60 หรือ luck>70)");
+                    if (q.needItem()) {
+                        if (!qs.useItem(q.requiredItem, q.requiredQty)) {
+                            System.out.println("ไอเทมไม่พอ ต้องใช้ " + q.requiredItem + " x" + q.requiredQty);
+                            continue;
+                        }
+                    }
+
+                    boolean ok = q.canComplete(energy, logic, luck);
+                    if (ok) {
+                        int r = q.rewardPoints(key);
+                        totalScore += r;
+                        qs.stats.put("completed", qs.stats.get("completed") + 1);
+                        System.out.println("สำเร็จ! +" + r + " points");
+                    } else {
+                        qs.stats.put("failed", qs.stats.get("failed") + 1);
+                        System.out.println("ยังทำไม่ได้ (ต้องมี energy>75 หรือ logic>60 หรือ luck>70)");
+                    }
+
+                } catch (InvalidQuestException e) {
+                    System.out.println(e.getMessage());
+                } catch (Exception e) {
+                    System.out.println("เกิดข้อผิดพลาด: " + e.getMessage());
                 }
 
             } else if (m == 3) {
                 System.out.println("completed=" + qs.stats.get("completed") + ", failed=" + qs.stats.get("failed"));
                 System.out.println("score=" + totalScore);
 
+            } else if (m == 4) {
+                System.out.println("=== Inventory ===");
+                for (String item : qs.inventory.keySet()) {
+                    System.out.println(item + " x" + qs.inventory.get(item));
+                }
             } else {
                 break;
             }
@@ -92,7 +114,7 @@ public class Main {
         System.out.println("signature=" + makeSignatureV2(studentId, totalScore, qs.stats.get("completed")));
 
         // TODO: พิมพ์ 1-2 ประโยคในโปรแกรมว่า OOP ช่วยให้โค้ดดูแลง่ายขึ้นอย่างไร
-        // การใช้ OOP ช่วยแยกความรับผิดชอบของคลาสอย่างชัดเจน 
+        // การใช้ OOP ช่วยแยกความรับผิดชอบของคลาสอย่างชัดเจน
         // ทำให้สามารถแก้ไขหรือเพิ่มประเภทเควสต์ใหม่ได้โดยไม่กระทบโค้ดส่วนอื่น
 
         sc.close();
